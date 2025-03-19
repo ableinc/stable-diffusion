@@ -1,0 +1,10 @@
+{
+  "xl": {
+    "model_name": "stabilityai/stable-diffusion-xl-base-1.0",
+    "refiner_name": "stabilityai/stable-diffusion-xl-refiner-1.0"
+  },
+  "base": {
+    "model_name": "stabilityai/stable-diffusion-2-1-base",
+    "refiner_name": ""
+  }
+}
