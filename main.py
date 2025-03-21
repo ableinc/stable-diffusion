@@ -9,18 +9,18 @@ import torch._dynamo
 torch._dynamo.config.suppress_errors = True
 
 
-def main(use_refiner: bool, use_gpu: bool, compile_unet: bool):
-    if not use_gpu:
+def main(use_refiner: bool, use_only_gpu: bool, compile_unet: bool):
+    if not use_only_gpu:
         print("[INFO] Using CPU instead of GPU (unsupported)")
     print(f"Loading {model_name} (model) from huggingface...")
     # load both base & refiner
     base = DiffusionPipeline.from_pretrained(
         model_name,
-        torch_dtype=torch.float16 if use_gpu else None,
+        torch_dtype=torch.float16 if use_only_gpu else None,
         use_safetensors=True,
         variant="fp16", # Nvidia drives only
     )
-    if not use_gpu:
+    if not use_only_gpu:
         base.enable_attention_slicing() # Saves VRAM
         base.enable_model_cpu_offload()  # Moves layers to CPU when needed
         base.to("cpu", non_blocking=True)
@@ -34,11 +34,11 @@ def main(use_refiner: bool, use_gpu: bool, compile_unet: bool):
             refiner_name,
             text_encoder_2=base.text_encoder_2,
             vae=base.vae,
-            torch_dtype=torch.float16 if use_gpu else None,
+            torch_dtype=torch.float16 if use_only_gpu else None,
             use_safetensors=True,
             variant="fp16",
         )
-        if not use_gpu:
+        if not use_only_gpu:
             refiner.enable_attention_slicing() # Saves VRAM
             refiner.enable_model_cpu_offload()  # Moves layers to CPU when needed
             refiner.to("cpu", non_blocking=True)
@@ -109,9 +109,9 @@ if __name__ == '__main__':
     guidance_scale = 7.5  # Enable classifier-free guidance
     # save file params
     prompt_to_file_name = "-".join(prompt.split(" ")[1:3])
-    file_name = f"{prompt_to_file_name}-{model_size}-{datetime.now().timestamp()}.png"
+    file_name = f"images/{prompt_to_file_name}-{model_size}-{datetime.now().timestamp()}.png"
     
     image_height = 512
     image_width = 512
     print(f"Prompt: {prompt}")
-    main(use_refiner=len(refiner_name) > 0, use_gpu=False, compile_unet=False)
+    main(use_refiner=len(refiner_name) > 0, use_only_gpu=False, compile_unet=False)
